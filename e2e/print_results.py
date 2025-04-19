@@ -1,14 +1,24 @@
 from pathlib import Path
 import json
 import numpy as np
+import argparse
 
 RESULT_PATH = (
     "/home/zacravi/projects/llm-planning-baselines/LLM-Planner/e2e/valid_unseen/results"
 )
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path", default="")
 
-    result_files = sorted(Path(RESULT_PATH).rglob("*json"))
+    args = parser.parse_args()
+
+    if args.path == "":
+        result_path = RESULT_PATH
+    else:
+        result_path = args.path
+
+    result_files = sorted(Path(result_path).rglob("*json"))
 
     success = []
 

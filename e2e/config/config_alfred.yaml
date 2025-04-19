@@ -5,7 +5,7 @@ debug: False # Used to debug a single task. Modify the line mentioned by NOTE in
 save_results: True  # Enable saving results for debugging
 
 llm_planner:
-  engine: "gpt-4o-mini"
+  engine: "unsloth"
   vision: False
   dynamic: False
   max_retries: 1  # Maximum number of retries per action
@@ -13,9 +13,10 @@ llm_planner:
   knn_dataset_path: "src/knn_set.pkl"
   emb_model_name: "paraphrase-MiniLM-L6-v2"
   num_in_context_examples: 9
-  use_step_instructions: False  # Set to False to disable step instructions
+  use_step_instructions: False # True # False  # Set to False to disable step instructions
   obj_sim_threshold: 0.8  # Threshold for fuzzy object matching (0.0 to 1.0)
   debug: True
+  model_path: ""  # for custom models
 
 
 alfred:

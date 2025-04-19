@@ -9,6 +9,7 @@ for running experiments on the ALFRED benchmark.
 
 # ALL in one script to run LLM-Planner on ALFRED tasks
 
+import shutil
 import os
 import base64
 import sys
@@ -58,6 +59,12 @@ class AlfredEvaluator:
         with open(config_file) as reader:
             self.config = yaml.safe_load(reader)
 
+        # Create the output directory if it doesn't exist
+        if self.config.get("save_results", False):
+            save_path = os.path.join(self.config["out_dir"], "results")
+            os.makedirs(save_path, exist_ok=True)
+            shutil.copy(config_file, f"{save_path}/config.yaml")
+
         # Initialize OpenAI client
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -66,6 +73,8 @@ class AlfredEvaluator:
             knn_data_path=self.config["llm_planner"]["knn_dataset_path"],
             emb_model_name=self.config["llm_planner"]["emb_model_name"],
             debug=self.config["llm_planner"]["debug"],
+            llm=self.config["llm_planner"]["engine"],
+            model_path=self.config["llm_planner"]["model_path"],
         )
 
         # Initialize environment
@@ -273,8 +282,8 @@ class AlfredEvaluator:
             log.debug(init_prompt)
             log.debug("=" * 50)
 
-        llm_out = self.llm(
-            init_prompt, engine=engine, images=encoded_frames, stop=["\n"]
+        llm_out = self.llm_planner.call_llm(
+            init_prompt, images=encoded_frames, stop=["\n"]
         )
         high_level_plans = self.clean_llm_output(llm_out)
         initial_high_level_plans = high_level_plans.copy()  # Store the initial plans

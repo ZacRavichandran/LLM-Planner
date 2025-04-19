@@ -1,6 +1,65 @@
-# End-to-End Agent
+#  LLM-Planner on alfred dataset
 
 An end-to-end agent that uses a LLM-Planner.
+
+## Running custom models
+
+Use the `engine` key in the [config](./config/config_alfred.yaml) to change the llm model used. The full config is as follows.
+You can provide a custom model path via `model_path`
+
+
+```yaml
+name: alfred
+out_dir: "./"
+debug: False # Used to debug a single task. Modify the line mentioned by NOTE in src/run_eval.py
+save_results: True  # Enable saving results for debugging
+
+llm_planner:
+  engine: "gpt-4o-mini"
+  vision: False
+  dynamic: False
+  max_retries: 1  # Maximum number of retries per action
+  max_replanning: 5  # Maximum number of dynamic replanning attempts per task
+  knn_dataset_path: "src/knn_set.pkl"
+  emb_model_name: "paraphrase-MiniLM-L6-v2"
+  num_in_context_examples: 9
+  use_step_instructions: False # True # False  # Set to False to disable step instructions
+  obj_sim_threshold: 0.8  # Threshold for fuzzy object matching (0.0 to 1.0)
+  debug: True
+  model_path: ""  # for custom models
+
+
+alfred:
+  env_args:
+    data: alfred/data/json_2.1.0
+    pframe: 300
+    fast_epoch: false
+    reward_config: alfred/models/config/rewards.json
+    max_steps: 1000
+    pp_folder: pp
+  x_display: '0'
+  eval_set: 'valid_unseen'  # valid_seen, valid_unseen
+  splits: alfred/data/splits/oct21.json
+```
+
+
+## Running evaluation 
+
+Use the [run_eval](./src/run_eval.py) script 
+
+```sh
+python run_eval --help
+    --config CONFIG
+    --dry_run DRY_RUN # for debugging
+```
+
+You can view aggregated stats with the [print_resulst](print_results.py) script
+
+```sh
+python print_results --help
+    --path PATH # result directory
+```
+
 
 
 ## What's Here

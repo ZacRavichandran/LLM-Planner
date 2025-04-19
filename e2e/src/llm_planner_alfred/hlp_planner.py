@@ -17,6 +17,8 @@ from transformers import GPT2Tokenizer
 from importlib.resources import files, as_file
 
 
+from llm_planner_alfred.llm import UnslothLLM
+
 try:
     from llm_planning.llm_logging import LLMDataLogger
 except:
@@ -87,12 +89,19 @@ class LLM_Planner:
         emb_model_name="paraphrase-MiniLM-L6-v2",
         debug=False,
         log_name="",
+        llm="openai",
+        model_path="",
     ):
         self.sentence_embedder = SentenceTransformer(emb_model_name)
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
         self.knn_set = pd.read_pickle(knn_data_path)
         self.debug = debug
-        self.client = OpenAI()
+
+        self.llm_model = llm
+        if self.llm_model == "gpt-4o" or self.llm_model == "gpt-4o-mini":
+            self.client = OpenAI()
+        elif self.llm_model == "unsloth":
+            self.client = UnslothLLM(model_path=model_path)
 
         self.logging_llm_data = False
         self.data_logger = None
@@ -439,11 +448,10 @@ class LLM_Planner:
 
         return plan_str
 
-    def call_llm(self, prompt, engine, images=None, stop=["\n"]):
+    def call_llm(self, prompt, images=None, stop=["\n"]):
         """Interface to LLM models"""
-
-        if engine == "gpt-4o-mini" or engine == "gpt-4o":
-            # Create the base message content
+        # Create the base message content
+        if self.llm_model == "gpt-4o-mini" or self.llm_model == "gpt-4o":
             message_content = []
 
             # Add text prompt
@@ -463,7 +471,7 @@ class LLM_Planner:
 
             # Make the API call
             response = self.client.chat.completions.create(
-                model=engine,
+                model=self.llm_model,
                 messages=input_msgs,
                 max_tokens=300,
                 temperature=0.0,
@@ -475,5 +483,19 @@ class LLM_Planner:
             if self.logging_llm_data:
                 self.data_logger.log(input_msgs)
 
+            return best_response
+
+        elif self.llm_model == "unsloth":
+            input_msgs = [
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ]
+
+            best_response, _ = self.client.query_llm(input_msgs)
+
+            return best_response
+
         else:
-            raise ValueError(f"{engine} is not supported!")
+            raise ValueError(f"{self.llm_model} is not supported!")
