@@ -21,9 +21,9 @@ from llm_planner_alfred.llm import UnslothLLM
 
 try:
     from llm_planning.llm_logging import LLMDataLogger
+    LLMDATA_IMPORT = True
 except:
-
-    pass
+    LLMDATA_IMPORT = False
 
 # Get a logger for this module
 log = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ class LLM_Planner:
         emb_model_name="paraphrase-MiniLM-L6-v2",
         debug=False,
         log_name="",
-        llm="openai",
+        llm="gpt-4o",
         model_path="",
     ):
         self.sentence_embedder = SentenceTransformer(emb_model_name)
@@ -107,7 +107,8 @@ class LLM_Planner:
         self.data_logger = None
         if log_name != "":
             self.logging_llm_data = True
-            self.data_logger = LLMDataLogger(name=log_name)
+            if LLMDATA_IMPORT:
+                self.data_logger = LLMDataLogger(name=log_name)
 
     def knn_retrieval(self, curr_task, k):
         # Find K train examples with closest sentence embeddings to test example
@@ -481,7 +482,8 @@ class LLM_Planner:
             input_msgs.append({"role": "assistant", "content": best_response})
 
             if self.logging_llm_data:
-                self.data_logger.log(input_msgs)
+                result = [ {"role": "user", "content": prompt}, {"role": "assistant", "content": best_response} ]
+                self.data_logger.log(result)
 
             return best_response
 
